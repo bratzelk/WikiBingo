@@ -5,7 +5,7 @@ WikiBingo
 Table of Contents
 -----------------
 
-- [Intro](#Intro)
+- [Intro](#intro)
 - [Game Rules](#game-rules)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
