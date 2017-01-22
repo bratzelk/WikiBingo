@@ -1,0 +1,33 @@
+extends layout
+
+block content
+  h1 WikiBingo
+  p.lead A simple game to demonstrate VueJS, NodeJS etc.
+  hr
+  .row
+    .col-sm-6
+      h2 Rules
+      p
+        ul(class="list-unstyled")
+          li
+            i(class="fa fa-question-circle")
+            span Choose any topic as a goal
+          li
+            i(class="fa fa-random")
+            span Get given a random starting topic
+          li
+            i(class="fa fa-sitemap")
+            span Follow the links from the starting topic
+          li
+            i(class="fa fa-certificate")
+            span Try to get to the goal via the fewest links
+      p
+        a.btn.btn-default(href='#', role='button') View details »
+    .col-sm-6
+      h2 Get Started
+      p Jump straight into the game
+      br
+      br
+      br
+      p
+        a.btn.btn-default(href='/game', role='button') Play Game »
