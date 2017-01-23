@@ -42,10 +42,52 @@ describe('GET /non-existing-url', () => {
 });
 
 
+
+
+describe('GET /api/query/australia', () => {
+  it('should return 200 OK', (done) => {
+    request(app)
+      .get('/api/query/australia')
+      .expect(200, done);
+  });
+});
+
 describe('GET /api/random', () => {
   it('should return 200 OK', (done) => {
     request(app)
       .get('/api/random')
+      .expect(200, done);
+  });
+});
+
+describe('GET /api/outgoing/deloraine', () => {
+  it('should return 200 OK', (done) => {
+    request(app)
+      .get('/api/outgoing/deloraine')
+      .expect(200, done);
+  }).timeout(5000);
+});
+
+describe('GET /api/incoming/australia', () => {
+  it('should return 200 OK', (done) => {
+    request(app)
+      .get('/api/incoming/australia')
+      .expect(200, done);
+  });
+});
+
+describe('GET /api/image/australia', () => {
+  it('should return 200 OK', (done) => {
+    request(app)
+      .get('/api/image/australia')
+      .expect(200, done);
+  });
+});
+
+describe('GET /api/contains/australia/tasmania', () => {
+  it('should return 200 OK', (done) => {
+    request(app)
+      .get('/api/contains/australia/tasmania')
       .expect(200, done);
   });
 });
