@@ -10,7 +10,9 @@
   "license": "MIT",
   "scripts": {
     "start": "node app.js",
-    "test": "mocha --reporter spec"
+    "pretest": "mongod --fork --logpath /dev/null",
+    "test": "mocha --reporter spec",
+    "posttest": "mongo admin --eval 'db.shutdownServer()' > /dev/null"
   },
   "dependencies": {
     "async": "^2.1.2",
