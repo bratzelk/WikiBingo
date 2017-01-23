@@ -9,10 +9,10 @@
   "author": "Kim Bratzel",
   "license": "MIT",
   "scripts": {
-    "start": "node app.js",
-    "pretest": "mongod --fork --logpath /dev/null",
+    //"pretest": "mongod --fork --logpath /dev/null",
+    //"posttest": "mongo admin --eval 'db.shutdownServer()' > /dev/null",
     "test": "mocha --reporter spec",
-    "posttest": "mongo admin --eval 'db.shutdownServer()' > /dev/null"
+    "start": "node app.js",
   },
   "dependencies": {
     "async": "^2.1.2",
