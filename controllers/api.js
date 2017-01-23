@@ -157,6 +157,10 @@ exports.getContains = (req, res) => {
 
   //TODO 
   console.log('Not Implemented Yet!');
+  var result = {'contains': false};
+  res.send(result);
+
+
 };
 
 
