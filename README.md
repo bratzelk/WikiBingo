@@ -1,3 +1,7 @@
+
+
+https://travis-ci.org/bratzelk/WikiBingo.svg?branch=master
+
 WikiBingo
 =======================
 
