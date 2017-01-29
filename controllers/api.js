@@ -87,7 +87,7 @@ exports.getIncomingLinks = (req, res, next) => {
     'action': 'query',
     'titles': title,
     'prop': 'linkshere',
-    'lhlimit': '100',
+    'lhlimit': 'max',
     'lhshow': '!redirect',
     'format': 'json',
   };
@@ -158,9 +158,19 @@ exports.getContains = (req, res, next) => {
  */
 var getAll = function(querystring, continueKey, callback) {
 
+  const maxPages = 5; //Maximum number of pages to fetch
+
+  var pageNumber = 0;
   var results = [];
 
   function getNext(callback, shouldContinue) {
+
+      if (pageNumber >= maxPages) {
+        callback(null, results);
+        return ;
+      }
+
+      pageNumber++;
 
       if (shouldContinue) {
         querystring[continueKey] = shouldContinue[continueKey];

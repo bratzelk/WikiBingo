@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../app.js');
 
+const longTestTime = 10000;
+
 describe('GET /', () => {
   it('should return 200 OK', (done) => {
     request(app)
@@ -65,7 +67,7 @@ describe('GET /api/outgoing/deloraine', () => {
     request(app)
       .get('/api/outgoing/deloraine')
       .expect(200, done);
-  }).timeout(5000);
+  }).timeout(longTestTime);
 });
 
 describe('GET /api/incoming/australia', () => {
@@ -73,7 +75,7 @@ describe('GET /api/incoming/australia', () => {
     request(app)
       .get('/api/incoming/australia')
       .expect(200, done);
-  });
+  }).timeout(longTestTime);
 });
 
 describe('GET /api/image/australia', () => {
@@ -89,5 +91,5 @@ describe('GET /api/contains/australia/tasmania', () => {
     request(app)
       .get('/api/contains/australia/tasmania')
       .expect(200, done);
-  });
+  }).timeout(longTestTime);
 });
