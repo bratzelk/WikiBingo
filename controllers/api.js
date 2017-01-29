@@ -1,13 +1,12 @@
 'use strict';
 
 const request = require('request');
-const shuffle = require('shuffle-array');
-
+const _ = require('lodash');
 
 /**
  * GET /api/query/:title
  */
-exports.getQuery = (req, res) => {
+exports.getQuery = (req, res, next) => {
   var title = req.params.title;
   console.log('Searching for: ' + title);
   
@@ -29,7 +28,7 @@ exports.getQuery = (req, res) => {
 /**
  * GET /api/random
  */
-exports.getRandom = (req, res) => {
+exports.getRandom = (req, res, next) => {
   console.log('Fetching Random Articles');
   
   const query = {
@@ -51,7 +50,7 @@ exports.getRandom = (req, res) => {
 /**
  * GET /api/outgoing/:title
  */
-exports.getOutgoingLinks = (req, res) => {
+exports.getOutgoingLinks = (req, res, next) => {
   var title = req.params.title;
   console.log('Fetching All Outgoing Links for: ' + title);
 
@@ -61,45 +60,26 @@ exports.getOutgoingLinks = (req, res) => {
     'prop': 'links',
     'pllimit': 'max',
     'format': 'json',
+    'redirects': ''
   };
 
-  var links = [];
-
-  var randomiseAndReduce = function(results) {
-    console.log('Found ' + results.length + ' outgoing links.');
-    shuffle(results);
-    results = results.splice(0, 9);
-    res.send(results);
-  };
-
-  var recursivelyFetch = function(err, req, body) {
-    if (err) { return next(err); }
-    var results = JSON.parse(body);
-
-    //Get all the outgoing links
-    for (var result in results.query.pages) {
-        if (results.query.pages[result].links) {
-          links = links.concat(results.query.pages[result].links);
-        }
-    }
-
-    var shouldContinue = ("continue" in results);
-    if(shouldContinue) {
-      query['plcontinue'] = results.continue.plcontinue;
-      request.get({ url: process.env.WIKI_API, qs: query }, recursivelyFetch);
-    }
-    else {
-      randomiseAndReduce(links);
-    }
-  }
-  request.get({ url: process.env.WIKI_API, qs: query }, recursivelyFetch);
+  getAll(query, 'plcontinue', function (err, everything) {
+      if (err) { return console.log('Error fetching all results:', err); }
+      //Only return an array of outgoing links
+      var links = _.chain(everything)
+                      .map('query.pages')
+                      .map(function(item) { return _.values(item)[0].links; })
+                      .flatten()
+                      .sampleSize(10) //Randomise and reduce to 10
+                      .value();
+      res.send(links);
+  });
 };
-
 
 /**
  * GET /api/incoming/:title
  */
-exports.getIncomingLinks = (req, res) => {
+exports.getIncomingLinks = (req, res, next) => {
   var title = req.params.title;
   console.log('Fetching Incoming Links For: ' + title);
 
@@ -112,17 +92,22 @@ exports.getIncomingLinks = (req, res) => {
     'format': 'json',
   };
 
-  request.get({ url: process.env.WIKI_API, qs: query }, (err, request, body) => {
-    if (err) { return next(err); }
-    const results = JSON.parse(body);
-    res.send(results);
+  getAll(query, 'lhcontinue', function (err, everything) {
+      if (err) { return console.log('Error fetching all results:', err); }
+      //Only return an array of linkshere
+      var links = _.chain(everything)
+                      .map('query.pages')
+                      .map(function(item) { return _.values(item)[0].linkshere; })
+                      .flatten()
+                      .value();
+      res.send(links);
   });
 };
 
 /**
  * GET /api/image/:title
  */
-exports.getImage = (req, res) => {
+exports.getImage = (req, res, next) => {
   var title = req.params.title;
   console.log('Fetching Image For: ' + title);
   
@@ -150,17 +135,52 @@ exports.getImage = (req, res) => {
 /**
  * GET /api/contains/:haystack/:needle
  */
-exports.getContains = (req, res) => {
+exports.getContains = (req, res, next) => {
   var haystack = req.params.haystack;
   var needle = req.params.needle;
   console.log('Checking if ' + haystack + ' contains ' + needle);
 
-  //TODO 
-  console.log('Not Implemented Yet!');
-  var result = {'contains': false};
-  res.send(result);
+  var host = req.protocol + '://' + req.get('host');
+  var endpoint = host + "/api/incoming/" + haystack;
 
+  //TODO FIXME
+  request.get({ url: endpoint }, (err, request, body) => {
+    if (err) { return next(err); }
+    const results = JSON.parse(body);
+    res.send(results);
+  });
 
 };
 
 
+/**
+ * Recursively fetches all results from api
+ */
+var getAll = function(querystring, continueKey, callback) {
+
+  var results = [];
+
+  function getNext(callback, shouldContinue) {
+
+      if (shouldContinue) {
+        querystring[continueKey] = shouldContinue[continueKey];
+      }
+
+      request.get({ url: process.env.WIKI_API, qs: querystring }, function(err, request, body) {
+          if (err) { return callback(err); }
+
+          var result = JSON.parse(body);
+          results = results.concat(result);
+
+          if ("continue" in result) {
+            getNext(callback, result.continue);
+          }
+          else {
+            callback(null, results);
+          }
+      });
+  };
+
+  getNext(callback);
+
+};

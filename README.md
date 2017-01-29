@@ -56,8 +56,9 @@ npm install
 # Or, if you prefer to use `yarn` instead of `npm`
 yarn install
 
-# Then simply start your app
+# Then simply start the app
 node app.js
+
 # Or 
 nodemon app.js
 ```
@@ -85,22 +86,12 @@ mongoose.connection.on('error', () => {
 ```
 You need to have a MongoDB server running before launching `app.js`. You can
 download MongoDB [here](http://mongodb.org/downloads), or install it via a package manager.
-<img src="http://dc942d419843af05523b-ff74ae13537a01be6cfec5927837dcfe.r14.cf1.rackcdn.com/wp-content/uploads/windows-8-50x50.jpg" height="17">
-Windows users, read [Install MongoDB on Windows](https://docs.mongodb.org/manual/tutorial/install-mongodb-on-windows/).
-
-**Tip:** If you are always connected to the internet, you could just use
-[mLab](https://mongolab.com/) or [Compose](https://www.compose.io/) instead
-of downloading and installing MongoDB locally. You will only need to update database credentials
-in `.env` file.
 
 ### I get an error when I deploy my app, why?
 Chances are you haven't changed the *Database URI* in `.env`. If `MONGODB`/`MONGOLAB_URI` is
 set to `localhost`, it will only work on your machine as long as MongoDB is
 running. When you deploy to Heroku, OpenShift or some other provider, you will not have MongoDB
-running on `localhost`. You need to create an account with [mLab](https://mongolab.com/)
-or [Compose](https://www.compose.io/), then create a free tier database.
-See [Deployment](#deployment) for more information on how to setup an account
-and a new database step-by-step with mLab.
+running on `localhost`. 
 
 ### Where do I change application settings/config?
 All application config is currently in .env.dev
