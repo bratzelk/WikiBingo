@@ -140,14 +140,28 @@ exports.getContains = (req, res, next) => {
   var needle = req.params.needle;
   console.log('Checking if ' + haystack + ' contains ' + needle);
 
-  var host = req.protocol + '://' + req.get('host');
-  var endpoint = host + "/api/incoming/" + haystack;
+  const query = {
+    'action': 'query',
+    'titles': needle,
+    'prop': 'links',
+    'pllimit': 'max',
+    'format': 'json',
+    'redirects': ''
+  };
 
-  //TODO FIXME
-  request.get({ url: endpoint }, (err, request, body) => {
-    if (err) { return next(err); }
-    const results = JSON.parse(body);
-    res.send(results);
+  //Find all outgoing links for needle, then see if any of them are the haystack
+  getAll(query, 'plcontinue', function (err, everything) {
+      if (err) { return console.log('Error fetching all results:', err); }
+      //Return only outgoing links matching the haystack
+      var links = _.chain(everything)
+                      .map('query.pages')
+                      .map(function(item) { return _.values(item)[0].links; })
+                      .flatten()
+                      .filter(function(e) { return e.title.toLowerCase() === haystack.toLowerCase(); })
+                      .value();
+
+      var result = {"result": links.length === 1};
+      res.send(result);
   });
 
 };
@@ -167,7 +181,7 @@ var getAll = function(querystring, continueKey, callback) {
 
       if (pageNumber >= maxPages) {
         callback(null, results);
-        return ;
+        return;
       }
 
       pageNumber++;
