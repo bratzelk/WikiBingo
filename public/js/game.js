@@ -87,7 +87,8 @@ Vue.component('goal-select', {
         console.log("Choosing goal: " + goal);
         this.chosenGoal = goal;
         this.loadImage(goal);
-        bus.$emit('selectGoal');
+        bus.$emit('randomStart:selectGoal');
+        bus.$emit('gameRound:setGoal', goal);
         this.seen = false;
     },
     loadExamples: function() {
@@ -138,12 +139,12 @@ Vue.component('random-start', {
         seen: false,
         topic: "",
         topics: [],
-    }
+    };
   },
   created: function () {
     var self = this;
     //Bind Event Listener
-    bus.$on('selectGoal', function () {
+    bus.$on('randomStart:selectGoal', function () {
         self.seen = true;
     });
   },
@@ -157,7 +158,7 @@ Vue.component('random-start', {
             self.topics = data.query.random;
             //Pick a random topic
             self.topic = self.topics[Math.floor(Math.random()*self.topics.length)].title;
-            bus.$emit('selectTopic', self.topic);
+            bus.$emit('gameRound:selectTopic', self.topic);
             self.seen = true;
           })
           .fail(function() {
@@ -196,13 +197,17 @@ Vue.component('game-round', {
         topic: "",
         topicImg: "",
         outgoingLinks: [],
-    }
+        goal: "",
+    };
   },
   created: function () {
     var self = this;
     //Bind Event Listener
-    bus.$on('selectTopic', function (topic) {
+    bus.$on('gameRound:selectTopic', function (topic) {
         self.choose(topic);
+    });
+    bus.$on('gameRound:setGoal', function (goal) {
+        self.goal = goal;
     });
   },
   methods: {
@@ -212,18 +217,26 @@ Vue.component('game-round', {
         console.log("Selecting topic: " + topic);
         self.topic = topic;
 
+        var normalised = Utils.normalise(topic);
+
+        //Check if this is a winning move
+        if(self.contains(normalised, self.goal)) {
+          bus.$emit('gameOver:win');
+          console.log("Yay! You win.");
+        }
+
         //Get outgoing links and display them
-        self.getOutgoingLinks(topic);
-        self.loadImage(topic);
+        self.getOutgoingLinks(normalised);
+        self.loadImage(normalised);
         self.score++;
     },
     getOutgoingLinks: function (topic) {
         var self = this;
-        var normalised = Utils.normalise(topic);
 
-        $.get("/api/outgoing/" + normalised)
+        $.get("/api/outgoing/" + topic)
           .done(function(data) {
             if (data.length === 0) {
+                bus.$emit('gameOver:noLinks');
                 console.log("Uh oh, page has no links!");
             }
             else {
@@ -233,6 +246,16 @@ Vue.component('game-round', {
           })
           .fail(function() {
             console.log("Error fetching topics");
+          });
+    },
+    contains: function(needle, haystack) {
+      $.get("/api/contains/" + haystack + "/" + needle)
+          .done(function(data) {
+              return data.result;
+          })
+          .fail(function() {
+            console.log("Error fetching topics");
+            return false;
           });
     },
     loadImage: function(topic) {
@@ -250,6 +273,46 @@ Vue.component('game-round', {
     },
   },
 });
+
+
+Vue.component('game-over', {
+  template: `
+            <div v-if="seen">
+               <h1>Game Over</h1>
+
+               <div class="col-sm-12"><b>{{ message }}</div>
+
+               <div>
+                  <button class="btn btn-danger" v-on:click="startOver">Start Again</button>
+               </div>
+
+            </div>
+        `,
+  data: function () {
+    return {
+        seen: false,
+        message: "",
+    };
+  },
+  created: function () {
+    var self = this;
+    //Bind Event Listener
+    bus.$on('gameOver:noLinks', function () {
+        self.seen = true;
+        message = "There were no links left!";
+    });
+    bus.$on('gameOver:win', function () {
+        self.seen = true;
+        message = "Congratulations! You won.";
+    });
+  },
+  methods: {
+    startOver: function () {
+        location.reload();
+    },
+  },
+});
+
 
 
 //Global Event Bus
